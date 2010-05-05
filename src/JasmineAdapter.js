@@ -60,7 +60,10 @@
         currentSpec.$id = id++;
       }
       var frame = this.jstdFrame = currentFrame;
-      this.jstdFrame.testCase.prototype['test that it ' + desc] = function(){
+      var name = 'test that it ' + desc;
+      if (this.jstdFrame.testCase.prototype[name])
+        throw "Spec with name '" + desc + "' already exists.";
+      this.jstdFrame.testCase.prototype[name] = function(){
         jasmine.getEnv().currentSpec = currentSpec;
         frame.runBefore.apply(currentSpec);
         try {
