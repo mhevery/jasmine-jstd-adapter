@@ -67,7 +67,7 @@
         jasmine.getEnv().currentSpec = currentSpec;
         frame.runBefore.apply(currentSpec);
         try {
-          itFn.apply(currentSpec);
+          currentSpec.queue.start();
         } finally {
           frame.runAfter.apply(currentSpec);
         }
