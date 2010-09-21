@@ -12,7 +12,10 @@
     };
   }
 
-  var currentFrame = frame(null, null);
+  var rootFrame = frame(null, null),
+      currentFrame = rootFrame,
+      /** flag that indicates if a picky mode is on, in this mode only 'iit's are executed */
+      pickyMode = false;
 
   function frame(parent, name){
     var caseName = (parent && parent.caseName ? parent.caseName + " " : '') + (name ? name : '');
@@ -20,6 +23,7 @@
       name: name,
       caseName: caseName,
       parent: parent,
+      children: [],
       testCase: TestCase(caseName),
       before: [],
       after: [],
@@ -36,8 +40,13 @@
         if (parent) parent.runAfter.apply(this);
       }
     };
+
+    if (parent) {
+      parent.children.push(frame);
+    }
+
     return frame;
-  };
+  }
 
   jasmine.Env.prototype.describe = (function(describe){
     return function(description){
@@ -49,10 +58,13 @@
 
   })(jasmine.Env.prototype.describe);
 
-  var id = 0;
+  var id = 0,
+      jasmineIt = jasmine.Env.prototype.it;
 
   jasmine.Env.prototype.it = (function(it){
     return function(desc, itFn){
+      if (pickyMode) return undefined;
+
       var self = this;
       var spec = it.apply(this, arguments);
       var currentSpec = this.currentSpec;
@@ -75,7 +87,43 @@
       return spec;
     };
 
-  })(jasmine.Env.prototype.it);
+  })(jasmineIt);
+
+
+  /**
+   * special spec definition function that will turn on the picky mode (if not on already), which
+   * means that only 'iit' specs will be run (and all regular 'it' specs will be ignored)
+   */
+  jasmine.Env.prototype.iit = (function(it){
+    return function(desc, itFn){
+      if (!pickyMode) {
+        silenceExistingSpecs(rootFrame);
+        pickyMode = true;
+      }
+
+      var self = this;
+      var spec = it.apply(this, arguments);
+      var currentSpec = this.currentSpec;
+      if (!currentSpec.$id) {
+        currentSpec.$id = id++;
+      }
+      var frame = this.jstdFrame = currentFrame;
+      var name = 'test that it ' + desc;
+      if (this.jstdFrame.testCase.prototype[name])
+        throw "Spec with name '" + desc + "' already exists.";
+      this.jstdFrame.testCase.prototype[name] = function(){
+        jasmine.getEnv().currentSpec = currentSpec;
+        frame.runBefore.apply(currentSpec);
+        try {
+          currentSpec.queue.start();
+        } finally {
+          frame.runAfter.apply(currentSpec);
+        }
+      };
+      return spec;
+    };
+
+  })(jasmineIt);
 
 
   jasmine.Env.prototype.beforeEach = (function(beforeEach){
@@ -108,4 +156,22 @@
   jasmine.currentEnv_ = null;
   jasmine.getEnv();
 
+
+  /** recursively walks all frames starting at the {frame} and removes existing specs ('it's) */
+  function silenceExistingSpecs(frame) {
+    for (var i=0; i<frame.children.length; i++) {
+      silenceExistingSpecs(frame.children[i]);
+    }
+
+    for (var specName in frame.testCase.prototype) {
+      delete frame.testCase.prototype[specName];
+    }
+  }
+
 })();
+
+
+/** iit exported into the global namespace */
+var iit = function(desc, fn) {
+  return jasmine.getEnv().iit(desc, fn);
+};
