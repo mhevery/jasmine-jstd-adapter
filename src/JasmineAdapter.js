@@ -112,6 +112,8 @@
       if (this.jstdFrame.testCase.prototype[name])
         throw "Spec with name '" + desc + "' already exists.";
       this.jstdFrame.testCase.prototype[name] = function(){
+        //reset pickyMode to OFF for future parse runs
+        pickyMode = false;
         jasmine.getEnv().currentSpec = currentSpec;
         frame.runBefore.apply(currentSpec);
         try {
