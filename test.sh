@@ -1,1 +1,2 @@
-java -jar lib/jstestdriver/JsTestDriver.jar --tests all --reset
+source test-regular.sh
+source test-iit.sh
