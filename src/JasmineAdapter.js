@@ -79,14 +79,14 @@
 
           reportSpecStarting: function(spec) {
             specLog = jstestdriver.console.log_ = [];
-            start = new Date().getTime();
+            start = Date.now();
           },
 
           reportSpecResults: function(spec) {
             var suite = spec.suite;
             var results = spec.results();
             if (results.skipped) return;
-            var end = new Date().getTime();
+            var end = Date.now();
             var messages = [];
             var resultItems = results.getItems();
             var state = 'passed';
