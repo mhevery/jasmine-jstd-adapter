@@ -7,12 +7,23 @@
   var describePath = [];
   rootDescribes.collectMode();
 
-  var jasmineTest = TestCase('Jasmine Adapter Tests', null, 'jasmine test case');
+  var JASMINE_TYPE = 'jasmine test case';
+  TestCase('Jasmine Adapter Tests', null, JASMINE_TYPE);
 
   var jasminePlugin = {
       name:'jasmine',
+
+      getTestRunsConfigurationFor: function(testCaseInfos, expressions, testRunsConfiguration) {
+        for (var i = 0; i < testCaseInfos.length; i++) {
+          if (testCaseInfos[i].getType() == JASMINE_TYPE) {
+            testRunsConfiguration.push(new jstestdriver.TestRunConfiguration(testCaseInfos[i], []));
+          }
+        }
+        return false;
+      },
+
       runTestConfiguration: function(testRunConfiguration, onTestDone, onTestRunConfigurationComplete){
-        if (testRunConfiguration.testCaseInfo_.template_ !== jasmineTest) return;
+        if (testRunConfiguration.getTestCaseInfo().getType() != JASMINE_TYPE) return false;
 
         var jasmineEnv = jasmine.currentEnv_ = new jasmine.Env();
         rootDescribes.playback();
@@ -70,6 +81,7 @@
         jasmineEnv.execute();
         return true;
       },
+
       onTestsFinish: function(){
         jasmine.currentEnv_ = null;
         rootDescribes.collectMode();
