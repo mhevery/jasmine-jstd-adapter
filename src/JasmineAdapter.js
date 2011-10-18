@@ -16,7 +16,7 @@
       getTestRunsConfigurationFor: function(testCaseInfos, expressions, testRunsConfiguration) {
         for (var i = 0; i < testCaseInfos.length; i++) {
           if (testCaseInfos[i].getType() == JASMINE_TYPE) {
-            testRunsConfiguration.push(testCaseInfos[i]);
+            testRunsConfiguration.push(new jstestdriver.TestRunConfiguration(testCaseInfos[i], []));
           }
         }
         return false;
