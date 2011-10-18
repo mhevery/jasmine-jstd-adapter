@@ -76,14 +76,51 @@
         };
         spyOn(this, 'runsFunction');
       });
-    
+
       runs(function(){
         this.runsFunction();
       });
-    
+
       runs(function(){
         expect(this.runsFunction).toHaveBeenCalled();
       });
     });
+  });
+
+  describe('should support multiple spies and subsequent actual calls', function(){
+    var testObject = {
+        functionToBeSpied : function(){
+            return -1;
+        },
+
+        caller : function(){
+            return this.functionToBeSpied();
+        }
+    };
+
+    it('first test case to spy the function', function(){
+        spyOn(testObject, 'functionToBeSpied').andReturn(7);
+        expect(testObject.caller()).toEqual(7);
+    });
+
+    it('second test case to spy the function', function(){
+        spyOn(testObject, 'functionToBeSpied').andReturn(70);
+        expect(testObject.caller()).toEqual(70);
+    });
+
+    it('last test case which calls the actual function', function(){
+        expect(testObject.caller()).toEqual(-1);
+    });
+  });
+
+  describe('jasmine#Waits', function() {
+      var interval = 200;
+      var now = +new Date();
+      it('waits for async assertions', function() {
+          waits(interval);
+          runs(function() {
+              expect(+new Date() - now).toBeGreaterThan(interval);
+          });
+      });
   });
 })();
